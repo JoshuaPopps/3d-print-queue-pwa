@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="1990">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>3D Print Queue</title>
+<meta name="description" content="The things waiting for the printer — what to print, on which machine, in what material, and in what order. Times and costs are yours, never estimated. Works offline, data stays on your device.">
+<meta name="theme-color" content="#070709">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;500;600;700&family=UnifrakturCook:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <p class="eyebrow">shop log &mdash; popps&rsquo;s garage</p>
+  <h1>3D Print Queue</h1>
+  <p class="tagline">What&rsquo;s waiting for the printer — in what order, on which machine, in what material.</p>
+</header>
+
+<main>
+  <!-- QUEUE -->
+  <section id="view-queue" class="view active">
+    <div class="grid">
+      <label>Bike
+        <select id="queue-bike"></select>
+      </label>
+      <label>Status
+        <select id="queue-status">
+          <option value="">All statuses</option>
+          <option value="printing">Printing</option>
+          <option value="queued">Queued</option>
+          <option value="failed">Failed</option>
+          <option value="done">Done</option>
+        </select>
+      </label>
+    </div>
+    <label>Search
+      <input type="text" id="queue-search" placeholder="name or file — e.g. console insert, 1916762">
+    </label>
+    <div id="jobs-list"></div>
+
+    <h2 id="form-heading">Add a job</h2>
+    <form id="job-form" class="card">
+      <div class="grid">
+        <label>Name<input type="text" id="j-name" required placeholder="e.g. Challenger console insert"></label>
+        <label>File / STL source (optional)<input type="text" id="j-file" placeholder="e.g. console-insert-v3.stl, or a MakerWorld link"></label>
+        <label>Bike<select id="j-bike"></select></label>
+        <label>Printer (optional)<input type="text" id="j-printer" list="printer-list" placeholder="e.g. Bambu P2S"></label>
+        <label>Material (optional)<input type="text" id="j-material" list="material-list" placeholder="e.g. ASA"></label>
+        <label>Status<select id="j-status">
+          <option value="queued">Queued</option>
+          <option value="printing">Printing</option>
+          <option value="done">Done</option>
+          <option value="failed">Failed</option>
+        </select></label>
+        <label>Priority<select id="j-priority">
+          <option>Low</option>
+          <option selected>Normal</option>
+          <option>High</option>
+        </select></label>
+        <label>Print time (optional)<input type="text" id="j-time" placeholder='e.g. 2h 30m, 150, 2.5h'></label>
+        <label>Cost, $ (optional)<input type="number" id="j-cost" inputmode="decimal" min="0" step="0.01" placeholder="e.g. 4.50"></label>
+        <label>Date added<input type="date" id="j-date" required></label>
+      </div>
+      <label>Notes<textarea id="j-notes" rows="2" placeholder="e.g. test print came out too big — rescale first"></textarea></label>
+      <p class="muted">A name is all it takes — the rest is optional. Print time is what the slicer said, typed in as &ldquo;2h 30m&rdquo;, &ldquo;150&rdquo; (minutes), &ldquo;2.5h&rdquo;, or &ldquo;45m&rdquo; — the app never estimates a time or a cost. Blank time or cost means unknown, and the totals say so instead of guessing.</p>
+      <datalist id="printer-list">
+        <option value="Bambu P2S"></option>
+        <option value="Ender 3 V2"></option>
+        <option value="Elegoo Mars"></option>
+      </datalist>
+      <datalist id="material-list">
+        <option value="ASA"></option>
+        <option value="Nylon-carbon"></option>
+        <option value="PLA"></option>
+        <option value="PETG"></option>
+        <option value="Resin"></option>
+      </datalist>
+      <button type="submit" class="primary" id="job-submit">Add job</button>
+      <button type="button" class="secondary" id="job-cancel" style="display:none">Cancel edit</button>
+    </form>
+  </section>
+
+  <!-- SUMMARY -->
+  <section id="view-summary" class="view">
+    <h2>Summary</h2>
+    <p class="muted">Queued time and cost add up only the jobs that have a time or a cost entered — a job with no time or cost entered carries none in the totals, and the summary counts it as unknown instead of guessing.</p>
+    <label>Bike
+      <select id="summary-bike"></select>
+    </label>
+    <div id="summary-cards"></div>
+  </section>
+
+  <!-- BIKES -->
+  <section id="view-bikes" class="view">
+    <h2>Bikes</h2>
+    <p class="muted">Bikes live in the shared Pocket Garage roster — the same b1/b2/b3 list the other apps use. Add a bike here and it is added to that roster for every app. There is no delete-bike here: roster management belongs to the landing dashboard, so a mistyped bike is removed there, not here.</p>
+    <div id="bikes-list"></div>
+
+    <h3>Add a bike</h3>
+    <form id="bike-form" class="card">
+      <div class="grid">
+        <label>Name<input type="text" id="bike-name" required placeholder="e.g. 1995 Fat Boy"></label>
+        <label>Year<input type="text" id="bike-year" inputmode="numeric" placeholder="1995"></label>
+        <label>Model<input type="text" id="bike-model" placeholder="Fat Boy"></label>
+      </div>
+      <label>Notes<textarea id="bike-notes" rows="2"></textarea></label>
+      <button type="submit" class="primary">Add bike</button>
+    </form>
+  </section>
+
+  <!-- DATA -->
+  <section id="view-data" class="view">
+    <h2>Your data</h2>
+    <p class="muted">No account, no server, no sync. Your queue lives in this browser's local storage. Back it up with Export — one JSON file.</p>
+    <p id="data-counts" class="card"></p>
+    <div class="card">
+      <h3>Export</h3>
+      <p class="muted">The backup is the whole print queue — every bike, every job. The per-bike export below is one bike's jobs, as JSON or readable plain text.</p>
+      <button id="export-btn" class="primary">Download JSON backup</button>
+      <button id="copy-export-btn" class="secondary">Copy JSON to clipboard</button>
+    </div>
+    <div class="card">
+      <h3>Export one bike</h3>
+      <label>Bike<select id="export-bike"></select></label>
+      <button id="export-json-btn" class="primary">Download JSON (this bike)</button>
+      <button id="export-text-btn" class="secondary">Download text (this bike)</button>
+      <button id="copy-text-btn" class="secondary">Copy text</button>
+    </div>
+    <div class="card">
+      <h3>Import</h3>
+      <p class="muted">Import replaces the current print queue. Export first if you want to keep it. Jobs pointing at a bike the shared roster doesn't have yet still load — they show under their roster key until that bike is added.</p>
+      <label>From file<input type="file" id="import-file" accept=".json,application/json"></label>
+      <label>Or paste JSON<textarea id="import-text" rows="4"></textarea></label>
+      <button id="import-btn" class="primary">Import print queue</button>
+    </div>
+    <div class="card">
+      <h3>Try it out</h3>
+      <p class="muted">Loads example jobs in the queue so you can see the order, the status buttons, and what a job without a time or cost does to the totals — before entering your own jobs. The example times and costs are example figures only.</p>
+      <button id="sample-btn" class="secondary">Load example data</button>
+      <button id="clear-btn" class="danger">Delete all jobs</button>
+      <p class="muted">Delete clears this app's jobs only. The shared bike roster is not touched.</p>
+    </div>
+  </section>
+</main>
+
+<nav class="bottomnav" aria-label="Sections">
+  <button class="navbtn active" data-view="queue">Queue</button>
+  <button class="navbtn" data-view="summary">Summary</button>
+  <button class="navbtn" data-view="bikes">Bikes</button>
+  <button class="navbtn" data-view="data">Data</button>
+</nav>
+
+<div id="toast" class="toast" role="status"></div>
+<script src="sw-update.js"></script>
+<script src="bike-profile.js"></script>
+<script src="app.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () { /* offline use is optional */ });
+    });
+  }
+</script>
+</body>
+</html>
